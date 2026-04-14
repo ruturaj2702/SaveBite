@@ -3,13 +3,17 @@ import axios from "axios";
 import FoodCard from "./components/FoodCard";
 
 const VolunteerPage = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAuthorized = user?.role === 'volunteer';
   const [tasks, setTasks] = useState([]);
 
   useEffect(() => {
   const fetchVolunteerTasks = async () => {
     try {
-      // CHANGE THIS URL to match your backend route #4
-      const res = await axios.get('http://localhost:5000/api/food/to-transport');
+      const token = localStorage.getItem("token");
+      const res = await axios.get('http://localhost:5000/api/food/to-transport', {
+        headers: { "x-auth-token": token }
+      });
       
       console.log("Volunteer Tasks Received:", res.data);
       // No need to filter here because the Backend already did it!
@@ -23,8 +27,11 @@ const VolunteerPage = () => {
 }, []);
 
   const handleDelivery = (id) => {
+    const token = localStorage.getItem("token");
     axios
-      .put(`http://localhost:5000/api/food/deliver/${id}`)
+      .put(`http://localhost:5000/api/food/deliver/${id}`, {}, {
+        headers: { "x-auth-token": token }
+      })
       .then(() => {
         setTasks((prev) => prev.filter((item) => item._id !== id));
       })
@@ -63,6 +70,7 @@ const VolunteerPage = () => {
                 buttonText="Mark as Delivered"
                 buttonColor="#2563eb" // Blue for logistics
                 onButtonClick={() => handleDelivery(item._id)}
+                isActionAllowed={isAuthorized}
               />
             </div>
           ))

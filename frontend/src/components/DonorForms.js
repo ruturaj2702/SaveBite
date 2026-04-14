@@ -7,7 +7,6 @@ const DonorForm = ({ onRefresh }) => {
 
   // Hooks MUST be inside this function
   const [formData, setFormData] = useState({
-    donorId: "69c516af23f292c30d37a87c",
     foodName: "",
     quantity: "",
     expiryTime: "",
@@ -28,8 +27,12 @@ const DonorForm = ({ onRefresh }) => {
       expiryTime: finalExpiry,
     };
 
+    const token = localStorage.getItem("token");
+
     axios
-      .post("http://localhost:5000/api/food/add", formData)
+      .post("http://localhost:5000/api/food/add", dataToSend, {
+        headers: { "x-auth-token": token }
+      })
       .then((res) => {
         // Replace alert("Food Added") with this:
         toast.success("🚀 Food listed! NGOs have been notified.");

@@ -1,6 +1,6 @@
 import React from "react";
 
-const FoodCard = ({ item, buttonText, buttonColor, onButtonClick }) => (
+const FoodCard = ({ item, buttonText, buttonColor, onButtonClick, isActionAllowed = true }) => (
   <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 w-72 hover:shadow-xl transition-shadow duration-300">
     <div
       className={`h-2 w-full`}
@@ -21,11 +21,12 @@ const FoodCard = ({ item, buttonText, buttonColor, onButtonClick }) => (
       </p>
 
       <button
-        onClick={() => onButtonClick(item._id)}
-        className="w-full py-2.5 rounded-lg font-bold text-white shadow-sm transition-transform active:scale-95"
-        style={{ backgroundColor: buttonColor }}
+        onClick={() => { if (isActionAllowed) onButtonClick(item._id); }}
+        disabled={!isActionAllowed}
+        className={`w-full py-2.5 rounded-lg font-bold text-white shadow-sm transition-transform ${isActionAllowed ? 'active:scale-95' : 'opacity-50 cursor-not-allowed'} `}
+        style={{ backgroundColor: isActionAllowed ? buttonColor : '#9ca3af' }}
       >
-        {buttonText}
+        {isActionAllowed ? buttonText : 'Read-Only'}
       </button>
     </div>
   </div>

@@ -47,7 +47,7 @@ const Home = () => {
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
           <p className="text-emerald-100 text-lg leading-relaxed">
-            Founded in 2024, <strong>FoodShare</strong> was built to solve the disconnect 
+            Founded in 2026, <strong>SaveBite</strong> was built to solve the disconnect 
             between food surplus and food scarcity. We believe that technology can 
             bridge the gap between abundance and need, ensuring that no good meal 
             goes to waste while people are still hungry.

@@ -3,22 +3,29 @@ import axios from "axios";
 import FoodCard from "./components/FoodCard"; // Make sure this path is correct!
 
 const NgoPage = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAuthorized = user?.role === 'ngo';
   const [availableFood, setAvailableFood] = useState([]);
   const [activeTab, setActiveTab] = useState("human");
 
   // 1. FETCH DATA ON LOAD
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get("http://localhost:5000/api/food/available")
+      .get("http://localhost:5000/api/food/available", {
+        headers: { "x-auth-token": token }
+      })
       .then((res) => setAvailableFood(res.data))
       .catch((err) => console.log(err));
   }, []);
 
-  // 2. THE CLAIM FUNCTION (PASTE THIS HERE)
+  // 2. THE CLAIM FUNCTION
   const handleClaim = (id) => {
-  const dummyNgoId = "507f1f77bcf86cd799439011"; 
+  const token = localStorage.getItem("token");
 
-  axios.put(`http://localhost:5000/api/food/claim/${id}`, { ngoId: dummyNgoId }) 
+  axios.put(`http://localhost:5000/api/food/claim/${id}`, {}, {
+    headers: { "x-auth-token": token }
+  })
     .then(res => {
       // Access the status inside the 'food' object from your route
       if (res.data.food && res.data.food.status === 'claimed') {
@@ -87,6 +94,7 @@ const NgoPage = () => {
                 buttonColor="#10b981"
                 buttonText="Claim Meal"
                 onButtonClick={() => handleClaim(item._id)} // <--- CONNECTED HERE
+                isActionAllowed={isAuthorized}
               />
             ))}
           </div>
@@ -106,6 +114,7 @@ const NgoPage = () => {
                   buttonColor="#92400e"
                   isEco={true} 
                   onButtonClick={() => handleClaim(item._id)}
+                  isActionAllowed={isAuthorized}
                 />
               ))}
             </div>

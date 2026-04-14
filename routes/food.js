@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Food = require('../models/Food');
+const auth = require('../middleware/auth');
 
 // 1. POST: Create a food listing
-router.post('/add', async (req, res) => {
+router.post('/add', auth, async (req, res) => {
   try {
-    const newFood = new Food(req.body);
+    // Prevent dummy ID from frontend, strictly map out identity from authenticated user token
+    const foodData = { ...req.body, donorId: req.user.id };
+    const newFood = new Food(foodData);
     await newFood.save();
     res.status(201).json({ message: "Food listed successfully!", food: newFood });
   } catch (err) {
@@ -14,7 +17,7 @@ router.post('/add', async (req, res) => {
 });
 
 // 2. GET: View all available food (For NGOs)
-router.get('/available', async (req, res) => {
+router.get('/available', auth, async (req, res) => {
   try {
     const listings = await Food.find({ status: 'available' }).populate('donorId', 'name address');
     res.json(listings);
@@ -24,22 +27,21 @@ router.get('/available', async (req, res) => {
 });
 
 // 3. PUT: NGO claims the food
-router.put('/claim/:id', async (req, res) => {
+router.put('/claim/:id', auth, async (req, res) => {
   try {
-    const { ngoId } = req.body;
     const updatedFood = await Food.findByIdAndUpdate(
       req.params.id, 
-      { status: 'claimed', ngoId: ngoId }, 
+      { status: 'claimed', ngoId: req.user.id }, 
       { new: true }
     );
     res.json({ message: "Food claimed successfully!", food: updatedFood });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
-}); // <--- THIS WAS THE MISSING BRACKET THAT CAUSED THE 404!
+});
 
 // 4. GET: Volunteers see food that is 'claimed'
-router.get('/to-transport', async (req, res) => {
+router.get('/to-transport', auth, async (req, res) => {
   try {
     const tasks = await Food.find({ status: 'claimed' })
       .populate('donorId', 'name address')
@@ -51,7 +53,7 @@ router.get('/to-transport', async (req, res) => {
 });
 
 // 5. PUT: Volunteer marks food as 'delivered'
-router.put('/deliver/:id', async (req, res) => {
+router.put('/deliver/:id', auth, async (req, res) => {
   try {
     const updatedFood = await Food.findByIdAndUpdate(
       req.params.id, 
