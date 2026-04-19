@@ -1,143 +1,173 @@
 import React, { useState } from "react";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useNavigate } from "react-router-dom";
+import { AuthProvider, useAuth } from './AuthContext';
 import DonorPage from "./DonorPage";
 import NgoPage from "./NgoPage";
 import VolunteerPage from "./VolunteerPage";
 import Home from "./Home";
 import Login from './Login';
 import Register from './Register';
+import './index.css';
 
+/* ── Protected Route ── */
 const ProtectedRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  const { user } = useAuth();
+  if (!user && !localStorage.getItem('token')) return <Navigate to="/login" replace />;
   return children;
 };
 
+/* ── Navbar ── */
 const Navbar = () => {
-  const location = useLocation();
+  const { user, logout } = useAuth();
+  const navigate         = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
-  const userStr = localStorage.getItem('user');
-  const user = userStr ? JSON.parse(userStr) : null;
+  const dropdownRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/login';
+    logout();
+    navigate('/login');
   };
 
   return (
-    <nav className="bg-emerald-600 shadow-lg p-4 text-white">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">🥗 SaveBite</h1>
-        <div className="space-x-6 font-medium flex items-center">
-          <NavLink to="/home" className="bg-white text-emerald-600 px-4 py-2 rounded-lg font-bold hover:bg-emerald-50 transition-colors duration-300">Home</NavLink>
-          
-          <NavLink to="/donor" className={({ isActive }) => `transition-colors duration-300 ${isActive ? 'text-emerald-100 border-b-2 border-white' : 'hover:text-emerald-200'}`}>
-            Hotel
-          </NavLink>
-          <NavLink to="/ngo" className={({ isActive }) => `transition-colors duration-300 ${isActive ? 'text-emerald-100 border-b-2 border-white' : 'hover:text-emerald-200'}`}>
-            NGO
-          </NavLink>
-          <NavLink to="/volunteer" className={({ isActive }) => `transition-colors duration-300 ${isActive ? 'text-emerald-100 border-b-2 border-white' : 'hover:text-emerald-200'}`}>
-            Volunteer
-          </NavLink>
+    <nav className="sb-nav">
+      <div className="sb-nav-logo">
+        <span>🥗</span> SaveBite
+      </div>
 
-          {user ? (
-            <div className="relative ml-4">
-              <button onClick={() => setShowDropdown(!showDropdown)} className="flex items-center space-x-2 focus:outline-none">
-                <img src={`https://ui-avatars.com/api/?name=${user.name}&background=random`} alt="Profile" className="w-10 h-10 rounded-full border-2 border-white"/>
-              </button>
-              {showDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg py-2 text-gray-800 z-50 border border-gray-100">
-                  <div className="px-4 py-3 border-b flex flex-col">
-                    <span className="font-bold">{user.name}</span>
-                    <span className="text-xs text-emerald-600 font-semibold uppercase">{user.role}</span>
-                    <span className="text-xs text-gray-500">{user.userId || user.email}</span>
-                  </div>
-                  <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 font-medium">Log out</button>
+      <div className="sb-nav-links">
+        <NavLink to="/home" className={({ isActive }) => `sb-nav-link ${isActive ? 'active' : ''}`}>
+          Home
+        </NavLink>
+        <NavLink to="/donor" className={({ isActive }) => `sb-nav-link ${isActive ? 'active' : ''}`}>
+          Hotel
+        </NavLink>
+        <NavLink to="/ngo" className={({ isActive }) => `sb-nav-link ${isActive ? 'active' : ''}`}>
+          NGO
+        </NavLink>
+        <NavLink to="/volunteer" className={({ isActive }) => `sb-nav-link ${isActive ? 'active' : ''}`}>
+          Volunteer
+        </NavLink>
+
+        {user ? (
+          /* ── Logged in: avatar + dropdown ── */
+          <div ref={dropdownRef} style={{ position: 'relative', marginLeft: '12px' }}>
+            <button
+              className="sb-avatar-btn"
+              onClick={() => setShowDropdown((prev) => !prev)}
+              title={`${user.name} (${user.role})`}
+            >
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=10b981&color=fff&bold=true`}
+                alt={user.name}
+              />
+            </button>
+
+            {showDropdown && (
+              <div className="sb-dropdown">
+                <div className="sb-dropdown-info">
+                  <div className="sb-dropdown-name">{user.name}</div>
+                  <div className="sb-dropdown-role">{user.role}</div>
+                  <div className="sb-dropdown-id">{user.userId || user.email}</div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex space-x-4 ml-4">
-              <NavLink to="/login" className={({ isActive }) => `transition-colors duration-300 ${isActive ? 'text-emerald-100 border-b-2 border-white' : 'hover:text-emerald-200'}`}>Login</NavLink>
-              <NavLink to="/register" className={({ isActive }) => `transition-colors duration-300 ${isActive ? 'text-emerald-100 border-b-2 border-white' : 'hover:text-emerald-200'}`}>Register</NavLink>
-            </div>
-          )}
-        </div>
+                <button className="sb-dropdown-btn" onClick={handleLogout}>
+                  ↩&nbsp; Log out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ── Not logged in: show Login + Get Started ── */
+          <>
+            <NavLink to="/login" className={({ isActive }) => `sb-nav-link ${isActive ? 'active' : ''}`}>
+              Login
+            </NavLink>
+            <NavLink to="/register" className="sb-nav-home-btn">
+              Get Started
+            </NavLink>
+          </>
+        )}
       </div>
     </nav>
   );
 };
 
+/* ── Footer ── */
 const Footer = () => (
-  <footer className="bg-gray-900 text-gray-400 py-10 mt-20 border-t border-gray-800">
-    <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+  <footer className="sb-footer">
+    <div className="sb-footer-inner">
       <div>
-        <h2 className="text-white font-bold text-lg mb-2">🥗 SaveBite</h2>
-        <p className="text-sm">Revolutionizing food logistics through zero-waste technology.</p>
+        <div className="sb-footer-logo">🥗 SaveBite</div>
+        <p className="sb-footer-tagline">
+          Revolutionizing food logistics through zero-waste technology. Every meal saved is a life touched.
+        </p>
       </div>
       <div>
-        <h4 className="text-white font-semibold mb-3">Quick Navigation</h4>
-        <div className="flex flex-col space-y-2 text-sm">
-          <span>Donor Portal</span>
-          <span>NGO Dashboard</span>
-          <span>Green Waste Program</span>
-        </div>
+        <div className="sb-footer-heading">Portals</div>
+        <a href="/donor" className="sb-footer-link">Hotel / Donor</a>
+        <a href="/ngo" className="sb-footer-link">NGO Dashboard</a>
+        <a href="/volunteer" className="sb-footer-link">Volunteer Portal</a>
       </div>
       <div>
-        <h4 className="text-white font-semibold mb-3">Contact Support</h4>
-        <p className="text-sm">support@savebite.org</p>
-        <p className="text-xs mt-4 text-gray-500">© 2026 SaveBite. All rights reserved.</p>
+        <div className="sb-footer-heading">Support</div>
+        <a href="mailto:support@savebite.org" className="sb-footer-link">support@savebite.org</a>
+        <a href="/register" className="sb-footer-link">Join the Mission</a>
       </div>
+    </div>
+    <div className="sb-footer-copy">
+      © 2026 SaveBite. All rights reserved. Built with ❤️ to end food waste.
     </div>
   </footer>
 );
 
+/* ── App Shell (inside Router so Navbar can use useNavigate) ── */
+const AppShell = () => (
+  <div style={{ minHeight: '100vh' }}>
+    <Navbar />
+    <div className="sb-main">
+      <Routes>
+        <Route path="/donor"     element={<ProtectedRoute><DonorPage /></ProtectedRoute>} />
+        <Route path="/ngo"       element={<ProtectedRoute><NgoPage /></ProtectedRoute>} />
+        <Route path="/volunteer" element={<ProtectedRoute><VolunteerPage /></ProtectedRoute>} />
+        <Route path="/home"      element={<Home />} />
+        <Route path="/login"     element={<Login />} />
+        <Route path="/register"  element={<Register />} />
+        <Route path="/"          element={<Navigate to="/home" replace />} />
+      </Routes>
+    </div>
+    <Footer />
+  </div>
+);
+
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-
-        {/* PAGE CONTENT */}
-        <div className="max-w-6xl mx-auto py-8 px-4">
-          <Routes>
-            <Route path="/donor" element={<ProtectedRoute><DonorPage /></ProtectedRoute>} />
-            <Route path="/ngo" element={<ProtectedRoute><NgoPage /></ProtectedRoute>} />
-            <Route path="/volunteer" element={<ProtectedRoute><VolunteerPage /></ProtectedRoute>} />
-            <Route
-              path="/"
-              element={
-                <div className="text-center py-20">
-                  <h2 className="text-4xl font-extrabold text-gray-800">
-                    Bridge the Gap. Feed the Hungry.
-                  </h2>
-                  <p className="mt-4 text-gray-600 text-lg">
-                    A real-time logistics platform for excess food management.
-                  </p>
-                  <Link
-                    to="/donor"
-                    className="mt-8 inline-block bg-emerald-600 text-white px-8 py-3 rounded-full font-bold hover:bg-emerald-700 shadow-md"
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              }
-            />
-            <Route path="/home" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Routes>
-        </div>
-      </div>
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} theme="colored" />
-      <Footer />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <AppShell />
+        <ToastContainer
+          position="top-right"
+          autoClose={3500}
+          hideProgressBar={false}
+          theme="dark"
+          toastStyle={{
+            background: 'var(--bg-card-2)',
+            border: '1px solid var(--glass-border)',
+            color: 'var(--text-primary)',
+          }}
+        />
+      </Router>
+    </AuthProvider>
   );
 }
 

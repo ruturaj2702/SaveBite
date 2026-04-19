@@ -2,73 +2,89 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useAuth } from './AuthContext';
 
 const Login = () => {
+  const { login } = useAuth();
   const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword]     = useState('');
+  const [loading, setLoading]        = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+    setLoading(true);
     try {
       const res = await axios.post('http://localhost:5000/api/auth/login', { identifier, password });
       const { token, user } = res.data;
-      
-      // Save session
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      toast.success('Login successful!');
-
-      // Redirect based on role
-      if (user.role === 'donor') {
-        navigate('/donor');
-      } else if (user.role === 'ngo') {
-        navigate('/ngo');
-      } else if (user.role === 'volunteer') {
-        navigate('/volunteer');
-      } else {
-        navigate('/home');
-      }
+      login(user, token);          // ← updates React state + localStorage atomically
+      toast.success('Welcome back! 👋');
+      if (user.role === 'donor')          navigate('/donor');
+      else if (user.role === 'ngo')       navigate('/ngo');
+      else if (user.role === 'volunteer') navigate('/volunteer');
+      else navigate('/home');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      toast.error(err.response?.data?.message || 'Login failed. Check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center py-12">
-      <div className="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 max-w-md w-full">
-        <h2 className="text-3xl font-bold text-gray-800 text-center mb-6">Sign In</h2>
-        
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email or User ID</label>
-            <input 
-              type="text" 
-              placeholder="e.g. john@domain.com or pikachu@hotel"
-              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+    <div className="sb-auth-wrapper">
+      <div className="sb-auth-card animate-fade-up">
+
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <div style={{
+            width: '56px', height: '56px', borderRadius: '16px',
+            background: 'rgba(16,185,129,0.15)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '26px', margin: '0 auto 16px',
+          }}>🥗</div>
+          <h1 className="sb-auth-title">Welcome back</h1>
+          <p className="sb-auth-sub">Sign in to your SaveBite account</p>
+        </div>
+
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div className="sb-form-group">
+            <label className="sb-label">Email or User ID</label>
+            <input
+              className="sb-input"
+              type="text"
+              placeholder="Enter your email or User ID"
+              value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input 
-              type="password" 
-              placeholder="••••••••"
-              className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+
+          <div className="sb-form-group">
+            <label className="sb-label">Password</label>
+            <input
+              className="sb-input"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          <button type="submit" className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition shadow-md">
-            Login
+
+          <button
+            type="submit"
+            className="sb-btn sb-btn-primary"
+            disabled={loading}
+            style={{ width: '100%', marginTop: '8px', padding: '14px' }}
+          >
+            {loading ? 'Signing in…' : 'Sign In →'}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-500">
-          Don't have an account? <Link to="/register" className="text-emerald-600 font-bold hover:underline">Register here</Link>
+        <div className="sb-auth-divider" />
+        <div className="sb-auth-footer">
+          Don't have an account?{' '}
+          <Link to="/register">Create one here</Link>
         </div>
       </div>
     </div>

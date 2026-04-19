@@ -1,35 +1,82 @@
 import React from "react";
 
-const FoodCard = ({ item, buttonText, buttonColor, onButtonClick, isActionAllowed = true }) => (
-  <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 w-72 hover:shadow-xl transition-shadow duration-300">
-    <div
-      className={`h-2 w-full`}
-      style={{ backgroundColor: buttonColor }}
-    ></div>
-    <div className="p-5">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xl font-bold text-gray-800 uppercase tracking-wide">
-          {item.foodName}
-        </h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-semibold">
-          {item.foodType}
-        </span>
-      </div>
-      <p className="text-gray-500 text-sm mb-4">
-        Quantity:{" "}
-        <span className="font-bold text-gray-800">{item.quantity}</span>
-      </p>
+const FoodCard = ({ item, buttonText, buttonColor, onButtonClick, isActionAllowed = true, isEco = false }) => {
+  const accentColor = isEco ? '#d97706' : (buttonColor || '#10b981');
+  const expiryDate  = item.expiryTime ? new Date(item.expiryTime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A';
+  const donorName   = item.donorId?.name    || null;
+  const donorAddr   = item.donorId?.address || null;
+  const ngoName     = item.ngoId?.name      || null;
 
-      <button
-        onClick={() => { if (isActionAllowed) onButtonClick(item._id); }}
-        disabled={!isActionAllowed}
-        className={`w-full py-2.5 rounded-lg font-bold text-white shadow-sm transition-transform ${isActionAllowed ? 'active:scale-95' : 'opacity-50 cursor-not-allowed'} `}
-        style={{ backgroundColor: isActionAllowed ? buttonColor : '#9ca3af' }}
-      >
-        {isActionAllowed ? buttonText : 'Read-Only'}
-      </button>
+  return (
+    <div className="sb-food-card">
+      {/* Accent bar */}
+      <div className="sb-food-card-accent" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
+
+      <div className="sb-food-card-body">
+        {/* Header row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', gap: '8px' }}>
+          <h3 className="sb-food-card-name" style={{ flex: 1 }}>{item.foodName}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+            <span className={`sb-badge ${isEco ? 'sb-badge-amber' : 'sb-badge-green'}`}>
+              {isEco ? '🍂 ECO' : '🥗 FOOD'}
+            </span>
+            <span className="sb-badge sb-badge-blue" style={{ fontSize: '10px' }}>
+              {item.foodType}
+            </span>
+          </div>
+        </div>
+
+        {/* Info rows */}
+        <div className="sb-food-card-row">
+          <span>📦</span>
+          <span>Qty: <strong>{item.quantity}</strong></span>
+        </div>
+        <div className="sb-food-card-row">
+          <span>⏰</span>
+          <span>Expires: <strong>{expiryDate}</strong></span>
+        </div>
+        {donorName && (
+          <div className="sb-food-card-row">
+            <span>🏨</span>
+            <span><strong>{donorName}</strong></span>
+          </div>
+        )}
+        {donorAddr && (
+          <div className="sb-food-card-row">
+            <span>📍</span>
+            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{donorAddr}</span>
+          </div>
+        )}
+        {ngoName && (
+          <div className="sb-food-card-row">
+            <span>🤝</span>
+            <span><strong>{ngoName}</strong></span>
+          </div>
+        )}
+      </div>
+
+      {/* Action button */}
+      <div className="sb-food-card-actions">
+        <button
+          onClick={() => { if (isActionAllowed && onButtonClick) onButtonClick(item._id); }}
+          disabled={!isActionAllowed}
+          className="sb-btn"
+          style={{
+            width: '100%',
+            background: isActionAllowed ? accentColor : 'transparent',
+            color: isActionAllowed ? '#0a0f0d' : 'var(--text-muted)',
+            border: isActionAllowed ? 'none' : '1px solid var(--border)',
+            fontWeight: 700,
+            padding: '11px',
+            cursor: isActionAllowed ? 'pointer' : 'not-allowed',
+            opacity: isActionAllowed ? 1 : 0.5,
+          }}
+        >
+          {isActionAllowed ? buttonText : '🔒 Read-Only'}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default FoodCard;

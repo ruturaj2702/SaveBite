@@ -1,87 +1,89 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import FoodCard from "./components/FoodCard";
 
 const VolunteerPage = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user         = JSON.parse(localStorage.getItem('user') || '{}');
   const isAuthorized = user?.role === 'volunteer';
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks]   = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const fetchVolunteerTasks = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get('http://localhost:5000/api/food/to-transport', {
-        headers: { "x-auth-token": token }
-      });
-      
-      console.log("Volunteer Tasks Received:", res.data);
-      // No need to filter here because the Backend already did it!
-      setTasks(res.data); 
-    } catch (err) {
-      console.error("Volunteer fetch failed:", err);
-    }
-  };
-
-  fetchVolunteerTasks();
-}, []);
+    const fetchTasks = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get('http://localhost:5000/api/food/to-transport', {
+          headers: { "x-auth-token": token },
+        });
+        setTasks(res.data);
+      } catch (err) {
+        console.error("Volunteer fetch failed:", err);
+        toast.error("Failed to load tasks.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, []);
 
   const handleDelivery = (id) => {
     const token = localStorage.getItem("token");
     axios
-      .put(`http://localhost:5000/api/food/deliver/${id}`, {}, {
-        headers: { "x-auth-token": token }
-      })
+      .put(`http://localhost:5000/api/food/deliver/${id}`, {}, { headers: { "x-auth-token": token } })
       .then(() => {
+        toast.success("🎉 Delivery confirmed! The NGO has been notified.");
         setTasks((prev) => prev.filter((item) => item._id !== id));
       })
-      .catch((err) => console.error("Delivery update failed", err));
+      .catch((err) => { console.error("Delivery update failed", err); toast.error("Failed to mark delivery."); });
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="flex items-center gap-4 mb-8">
-        <div className="bg-blue-600 p-3 rounded-2xl text-white text-2xl">
-          🚚
-        </div>
+    <div>
+      {/* Header */}
+      <div className="sb-page-header">
+        <div className="sb-page-icon" style={{ background: 'rgba(96,165,250,0.15)', borderColor: 'rgba(96,165,250,0.3)' }}>🚚</div>
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900">
-            Volunteer Portal
-          </h1>
-          <p className="text-gray-500">
-            Active pickups required for community support.
-          </p>
+          <h1 className="sb-page-title">Volunteer Portal</h1>
+          <p className="sb-page-subtitle">Active pickup tasks waiting for your help</p>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {tasks.length > 0 ? (
-          tasks.map((item) => (
-            <div key={item._id} className="relative">
-              {/* Badge to show if it's Fresh or Green Waste */}
-              <span
-                className={`absolute -top-2 -right-2 px-3 py-1 rounded-full text-xs font-bold text-white z-10 shadow-sm ${item.condition === "Damaged" ? "bg-amber-600" : "bg-emerald-600"}`}
-              >
-                {item.condition === "Damaged" ? "🍂 ECO" : "🥗 FOOD"}
-              </span>
-
-              <FoodCard
-                item={item}
-                buttonText="Mark as Delivered"
-                buttonColor="#2563eb" // Blue for logistics
-                onButtonClick={() => handleDelivery(item._id)}
-                isActionAllowed={isAuthorized}
-              />
-            </div>
-          ))
-        ) : (
-          <div className="col-span-full text-center py-20 bg-gray-100 rounded-[2rem] border-2 border-dashed border-gray-300">
-            <p className="text-gray-500 font-medium">
-              No pending deliveries. You're all caught up!
-            </p>
-          </div>
+        {tasks.length > 0 && (
+          <span className="sb-badge sb-badge-blue" style={{ marginLeft: 'auto' }}>
+            {tasks.length} task{tasks.length !== 1 ? 's' : ''} pending
+          </span>
         )}
       </div>
+
+      {/* Content */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '80px', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px' }}>⏳</div>
+          Loading your tasks…
+        </div>
+      ) : tasks.length > 0 ? (
+        <>
+          <div className="sb-section-label">Pending Deliveries</div>
+          <div className="sb-grid-3">
+            {tasks.map((item) => (
+              <FoodCard
+                key={item._id}
+                item={item}
+                buttonText="✅ Mark as Delivered"
+                buttonColor="#3b82f6"
+                onButtonClick={() => handleDelivery(item._id)}
+                isActionAllowed={isAuthorized}
+                isEco={item.condition === 'Damaged'}
+              />
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="sb-empty">
+          <div className="sb-empty-icon">🎉</div>
+          <div className="sb-empty-text">You're all caught up!</div>
+          <div className="sb-empty-sub">No pending pickups right now. Check back soon.</div>
+        </div>
+      )}
     </div>
   );
 };

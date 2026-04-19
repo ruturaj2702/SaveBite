@@ -2,21 +2,28 @@ import React from 'react';
 import DonorForm from './components/DonorForms';
 
 const DonorPage = () => {
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user         = JSON.parse(localStorage.getItem('user') || '{}');
   const isAuthorized = user?.role === 'donor';
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-extrabold text-gray-900 mb-8">Donor Dashboard</h1>
+    <div>
+      <div className="sb-page-header">
+        <div className="sb-page-icon">🏨</div>
+        <div>
+          <h1 className="sb-page-title">Hotel Dashboard</h1>
+          <p className="sb-page-subtitle">Manage and publish your excess food donations</p>
+        </div>
+      </div>
+
       {isAuthorized ? (
-        <DonorForm onRefresh={() => alert("Food added! Check the NGO page.")} />
+        <DonorForm onRefresh={() => {}} />
       ) : (
-        <div className="bg-gray-100 p-8 rounded-3xl border-2 border-dashed border-gray-300 text-center py-20">
-          <p className="text-gray-500 font-medium text-lg">
-            Read-Only Mode
-          </p>
-          <p className="text-gray-400 mt-2">
-            You are logged in as a {user?.role?.toUpperCase()}. Only Hotel/Donor accounts can publish food donations.
+        <div className="sb-read-only">
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
+          <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Read-Only Mode</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
+            You are logged in as a <span style={{ color: 'var(--brand-light)', fontWeight: 600 }}>{user?.role?.toUpperCase()}</span>.
+            Only Hotel / Donor accounts can publish food donations.
           </p>
         </div>
       )}
