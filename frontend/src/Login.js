@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from './AuthContext';
+import API_URL from './config';
 
 const Login = () => {
   const { login } = useAuth();
@@ -15,7 +16,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { identifier, password });
+      const res = await axios.post(`${API_URL}/auth/login`, { identifier, password });
       const { token, user } = res.data;
       login(user, token);          // ← updates React state + localStorage atomically
       toast.success('Welcome back! 👋');

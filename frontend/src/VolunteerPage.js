@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import FoodCard from "./components/FoodCard";
+import API_URL from "./config";
+
 
 const VolunteerPage = () => {
   const user         = JSON.parse(localStorage.getItem('user') || '{}');
@@ -13,7 +15,7 @@ const VolunteerPage = () => {
     const fetchTasks = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get('http://localhost:5000/api/food/to-transport', {
+        const res = await axios.get(`${API_URL}/food/to-transport`, {
           headers: { "x-auth-token": token },
         });
         setTasks(res.data);
@@ -30,7 +32,7 @@ const VolunteerPage = () => {
   const handleDelivery = (id) => {
     const token = localStorage.getItem("token");
     axios
-      .put(`http://localhost:5000/api/food/deliver/${id}`, {}, { headers: { "x-auth-token": token } })
+      .put(`${API_URL}/food/deliver/${id}`, {}, { headers: { "x-auth-token": token } })
       .then(() => {
         toast.success("🎉 Delivery confirmed! The NGO has been notified.");
         setTasks((prev) => prev.filter((item) => item._id !== id));

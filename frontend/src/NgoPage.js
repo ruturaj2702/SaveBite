@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import FoodCard from "./components/FoodCard";
+import API_URL from "./config";
+
 
 const NgoPage = () => {
   const user         = JSON.parse(localStorage.getItem('user') || '{}');
@@ -13,14 +15,14 @@ const NgoPage = () => {
   useEffect(() => {
     const token = localStorage.getItem("token");
     axios
-      .get("http://localhost:5000/api/food/available", { headers: { "x-auth-token": token } })
+      .get(`${API_URL}/food/available`, { headers: { "x-auth-token": token } })
       .then((res) => { setAvailableFood(res.data); setLoading(false); })
       .catch((err) => { console.log(err); setLoading(false); });
   }, []);
 
   const handleClaim = (id) => {
     const token = localStorage.getItem("token");
-    axios.put(`http://localhost:5000/api/food/claim/${id}`, {}, { headers: { "x-auth-token": token } })
+    axios.put(`${API_URL}/food/claim/${id}`, {}, { headers: { "x-auth-token": token } })
       .then((res) => {
         if (res.data.food?.status === 'claimed') {
           toast.success("✅ Food claimed! Volunteers will be notified.");

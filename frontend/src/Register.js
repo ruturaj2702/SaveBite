@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import API_URL from './config';
 
 const roles = [
   { value: 'donor',     emoji: '🏨', label: 'Hotel / Donor' },
@@ -22,7 +23,7 @@ const Register = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/auth/register', formData);
+      await axios.post(`${API_URL}/auth/register`, formData);
       toast.success('Account created! Please log in. 🎉');
       navigate('/login');
     } catch (err) {

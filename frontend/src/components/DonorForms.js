@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import API_URL from "../config";
+
 
 const DonorForm = ({ onRefresh }) => {
   const [formData, setFormData] = useState({
@@ -17,7 +19,7 @@ const DonorForm = ({ onRefresh }) => {
     const token = localStorage.getItem("token");
 
     try {
-      await axios.post("http://localhost:5000/api/food/add", { ...formData, expiryTime: finalExpiry }, {
+      await axios.post(`${API_URL}/food/add`, { ...formData, expiryTime: finalExpiry }, {
         headers: { "x-auth-token": token },
       });
       toast.success("🚀 Food listed! NGOs have been notified via email.");
