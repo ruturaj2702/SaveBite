@@ -11,11 +11,15 @@ dotenv.config();
 const app = express();
 
 // 2. Middleware (MUST BE BEFORE ROUTES)
-app.use(cors({
-  origin: "*", // Allows any site to access (Standard for public APIs)
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "x-auth-token"]
-}));
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, x-auth-token");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 app.use(express.json());
 
 // 3. Connect to MongoDB
