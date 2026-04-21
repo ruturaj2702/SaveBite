@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/food_management')
   .then(async () => {
     console.log("Connected to MongoDB");
-    const User = require('./models/user');
+    const User = require('./models/User');
     
     // Find latest users
     const users = await User.find({}).sort({createdAt: -1}).limit(10);

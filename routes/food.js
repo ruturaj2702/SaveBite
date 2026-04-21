@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Food = require('../models/Food');
-const User = require('../models/user');
+const User = require('../models/User');
 const auth = require('../middleware/auth');
 const sendEmail = require('../mail');
 const {
